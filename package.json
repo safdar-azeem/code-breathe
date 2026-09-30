@@ -1,6 +1,6 @@
 {
   "name": "code-breathe",
-  "version": "0.0.5",
+  "version": "0.0.2",
   "description": "Consistent formatting and logical blank lines for Vue, JavaScript, and TypeScript projects.",
   "type": "module",
   "license": "MIT",
