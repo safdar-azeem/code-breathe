@@ -70,6 +70,57 @@ test('supports Vue aliases, namespaces and effects', async () => {
   assert.match(namespace, /state = 1\n\nconst value/)
 })
 
+test('separates each callback declaration while keeping simple composables together', async () => {
+  const text = `<script setup lang="ts">
+import { computed } from 'vue'
+const website = useWebsite()
+const profile = useSection('profile')
+const id = computed(() => profile.value?.id)
+const binding = computed(() => website.binding(id.value))
+const select = () => {
+  website.select(id.value)
+}
+const retry = () => {
+  website.retry(id.value)
+}
+</script>
+`
+  const output = await fix(text)
+  assert.match(output, /useWebsite\(\)\nconst profile/)
+  assert.match(output, /useSection\('profile'\)\n\nconst id/)
+  assert.match(output, /profile.value\?\.id\)\n\nconst binding/)
+  assert.match(output, /website.binding\(id.value\)\)\n\nconst select/)
+  assert.match(output, /website.select\(id.value\)\n\}\n\nconst retry/)
+  assert.equal(await fix(output), output)
+})
+
+test('separates multiline calls and traditional functions, not nested callbacks', async () => {
+  const text = `const website = useWebsite()
+const profile = useSection(
+  'profile',
+  { scope: 'home' }
+)
+const socials = useSection('socials')
+function select() {
+  const values = [1, 2]
+  const filtered = values.filter((value) => value > 1)
+  return filtered
+}
+function retry() {
+  return website.retry()
+}
+const transform = function () { return 1 }
+const read = function () { return 2 }
+`
+  const output = await fix(text, 'example.ts')
+  assert.match(output, /useWebsite\(\)\n\nconst profile/)
+  assert.match(output, /scope: 'home' \}\n\)\n\nconst socials/)
+  assert.match(output, /return filtered\n\}\n\nfunction retry/)
+  assert.match(output, /values = \[1, 2\]\n  const filtered/)
+  assert.match(output, /return 1 \}\n\nconst read/)
+  assert.equal(await fix(output, 'example.ts'), output)
+})
+
 test('does not classify unrelated computed/on-prefixed functions as Vue APIs', async () => {
   const text =
     "import { computed, onMounted } from './business'\nconst state = 1\nconst a = computed(state)\nconst b = onMounted(a)\nconst c = onPurchase(b)\n"
