@@ -1,7 +1,7 @@
 # code-breathe
 
 Consistent formatting and readable blank lines for Vue, JavaScript, and TypeScript.
-Version **0.0.1**. Works with portfolios, stores, blogs, dashboards, services, and libraries.
+Version **0.0.2**. Works with portfolios, stores, blogs, dashboards, services, and libraries.
 
 ## Install and initialize
 
@@ -66,11 +66,16 @@ const heading = computed(() => props.label.toUpperCase())
 
 Missing boundaries are inserted between imports, types, Vue props/emits,
 state/composable declarations, imported Vue computed values, methods, and imported
-Vue lifecycle/effects. Imported aliases and Vue namespace imports are supported.
+Vue lifecycle/effects. Each top-level declaration containing an arrow/function callback
+or spanning multiple lines also gets a blank line before and after it. Simple one-line
+composable calls remain together. Inline callbacks stay inside their expressions;
+nested function bodies are not spaced by this rule. Function overload signatures
+remain attached to their implementation. Imported aliases and Vue namespace imports
+are supported.
 Comments stay attached. Source order and nested function bodies are preserved.
 This is syntax-based grouping, not an attempt to infer every conceptual relationship.
 React and other JavaScript/TypeScript projects receive generic grouping; React-specific
-hook grouping is not part of 0.0.1.
+hook grouping is not part of 0.0.2.
 
 Prettier handles Vue, JS/TS, JSX/TSX, HTML, CSS/SCSS, JSON, YAML, Markdown, GraphQL,
 and its other built-in languages. Semantic blank-line fixes apply only to script files.
