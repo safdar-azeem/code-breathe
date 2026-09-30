@@ -1,0 +1,56 @@
+{
+  "name": "code-breathe",
+  "version": "0.0.1",
+  "description": "Consistent formatting and logical blank lines for Vue, JavaScript, and TypeScript projects.",
+  "type": "module",
+  "license": "MIT",
+  "author": "Safdar Azeem",
+  "engines": {
+    "node": "^22.13.0 || >=24.0.0"
+  },
+  "bin": {
+    "code-breathe": "./bin/code-breathe.mjs"
+  },
+  "exports": {
+    ".": "./src/index.mjs",
+    "./prettier": "./src/prettier.cjs",
+    "./eslint": "./src/eslint.mjs",
+    "./plugin": "./src/plugin.mjs",
+    "./editor/prettier": "./editor/prettier.cjs",
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "bin",
+    "src",
+    "editor",
+    "README.md",
+    "LICENSE"
+  ],
+  "scripts": {
+    "test": "node --test test/*.test.mjs",
+    "test:integration": "node test/packed.integration.mjs",
+    "format:files": "node bin/code-breathe.mjs format",
+    "format:check": "node bin/code-breathe.mjs check --all",
+    "prepublishOnly": "npm test && npm run format:check"
+  },
+  "dependencies": {
+    "@typescript-eslint/parser": "8.71.0",
+    "eslint": "10.11.0",
+    "fast-glob": "3.3.3",
+    "ignore": "7.0.10",
+    "jsonc-parser": "3.3.1",
+    "prettier": "3.9.9",
+    "typescript": "5.9.3",
+    "vue-eslint-parser": "10.4.1"
+  },
+  "keywords": [
+    "formatter",
+    "prettier",
+    "eslint",
+    "vue",
+    "typescript",
+    "javascript",
+    "blank-lines",
+    "readability"
+  ]
+}
