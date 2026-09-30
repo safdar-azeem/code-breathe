@@ -11,6 +11,7 @@ const marker = '// Managed by code-breathe.'
 const packageManager = (pkg, cwdFiles) =>
   pkg.packageManager?.split('@')[0] ??
   (cwdFiles.has('pnpm-lock.yaml') ? 'pnpm' : cwdFiles.has('yarn.lock') ? 'yarn' : 'npm')
+
 const command = (manager, script) =>
   manager === 'npm' ? `npm run ${script} --` : `${manager} ${script}`
 
@@ -263,7 +264,7 @@ export const initialize = async ({
 
   if (agents) {
     const invocation = command(manager, 'format:files')
-    const instructions = `${start}\n## Formatting with code-breathe\n\n- After changing files, run \`${invocation} <files...>\` with only the files you changed.\n- Keep unrelated dirty files untouched; reserve full-project formatting for an explicit request.\n- Keep imports, types, props/emits, state/composables, computed values, methods, and lifecycle/effects separated by a blank line. The formatter inserts missing boundaries.\n- Formatting remains separate from the dev server.\n- Run \`${command(manager, 'format:check').replace(/ --$/, '')}\` to check local changes; CI uses \`code-breathe check --all\` or \`--base <ref>\`.\n${end}`
+    const instructions = `${start}\n## Formatting with code-breathe\n\n- After changing files, run \`${invocation} <files...>\` with only the files you changed.\n- Keep unrelated dirty files untouched; reserve full-project formatting for an explicit request.\n- Keep imports, types, props/emits, state/composables, computed values, methods, and lifecycle/effects separated by a blank line. The formatter inserts missing boundaries.\n- Separate each top-level arrow/function callback declaration and multiline declaration with a blank line. Keep simple one-line composable calls together; do not add blank lines inside inline callbacks or split function overload signatures.\n- Formatting remains separate from the dev server.\n- Run \`${command(manager, 'format:check').replace(/ --$/, '')}\` to check local changes; CI uses \`code-breathe check --all\` or \`--base <ref>\`.\n${end}`
     for (const name of ['AGENTS.md', 'CLAUDE.md']) {
       await propose(
         name,
