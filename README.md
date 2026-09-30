@@ -1,7 +1,7 @@
 # code-breathe
 
 Consistent formatting and readable blank lines for Vue, JavaScript, and TypeScript.
-Version **0.0.3**. Works with portfolios, stores, blogs, dashboards, services, and libraries.
+Version **0.0.5**. Works with portfolios, stores, blogs, dashboards, services, and libraries.
 
 ## Install and initialize
 
@@ -76,11 +76,57 @@ are supported.
 Comments stay attached. Source order and nested function bodies are preserved.
 This is syntax-based grouping, not an attempt to infer every conceptual relationship.
 React and other JavaScript/TypeScript projects receive generic grouping; React-specific
-hook grouping is not part of 0.0.3.
+hook grouping is not part of 0.0.5.
 
 Prettier handles Vue, JS/TS, JSX/TSX, HTML, CSS/SCSS, JSON, YAML, Markdown, GraphQL,
 and its other built-in languages. Semantic blank-line fixes apply only to script files.
 Python, Java, Rust, and PHP are not supported without additional formatter integrations.
+
+## Safe Vue and HTML attribute ordering
+
+Multiline opening tags use the same ordering for native elements and Vue components,
+including PascalCase, kebab-case, normal, and self-closing tags. Existing Prettier
+wrapping remains authoritative: this feature does not expand a short single-line tag.
+Within safely sortable attribute lists, structural `v-if` and `v-for` directives
+stay first, preserving their relative order. Other attributes sort shortest to
+longest by their complete formatted text, including values and expressions but
+excluding indentation. Equal-length attributes keep their original order.
+
+```vue
+<button
+  id="profile"
+  @click="open"
+  :disabled="loading"
+  class="profile-button"
+  aria-label="Open account settings"
+>
+  Settings
+</button>
+```
+
+Ordering is conservative rather than a refactor. Expressions, modifiers, names,
+values, children, and tag names are never rewritten by the attribute sorter.
+Bare object bindings/listener objects, dynamic arguments, custom directives,
+duplicate or potentially overlapping bindings, comments, and other uncertain
+constructs preserve their ordering. No object binding is blindly moved ahead of
+explicit attributes. Inline scripts, styles, and Vue custom blocks are outside
+the attribute sorter's scope. Formatting again produces the same ordering.
+
+Vue SFCs using `lang="ts"` or `lang="tsx"` support TypeScript template expressions,
+including `as`, non-null assertions, and `satisfies`. The sorter does not parse
+script content, and malformed template expressions leave the source unchanged.
+
+As with normal template formatting, ordinary value/member reads are assumed to
+be pure. JavaScript getters or proxies can make otherwise simple-looking reads
+observable; the formatter cannot prove their application-specific behavior.
+Expressions with known execution or mutation risks are left in place, and a
+`<!-- prettier-ignore -->` comment can protect an element whose ordering has
+special meaning in your application.
+
+The CLI and the existing Prettier editor bridge use the same sorting behavior.
+No new initialization step or editor configuration is needed when upgrading an
+already-initialized project. Using the plain Prettier package directly does not
+apply code-breathe's attribute ordering.
 
 ## Existing preferences and ignored files
 
