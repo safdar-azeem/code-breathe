@@ -52,9 +52,12 @@ export default {
     schema: [],
     docs: {
       description:
-        'Separate logical groups, callback declarations, and multiline declarations without reordering code.',
+        'Separate logical groups and multiline declarations while keeping related one-line callbacks together.',
     },
-    messages: { separate: 'Add a blank line between {{previous}} and {{current}}.' },
+    messages: {
+      separate: 'Add a blank line between {{previous}} and {{current}}.',
+      compact: 'Keep related one-line callbacks together without a blank line.',
+    },
   },
   create(context) {
     const source = context.sourceCode
@@ -148,17 +151,21 @@ export default {
 
         const standalone = (statement) => {
           const node = statement.declaration ?? statement
+          return (
+            ['VariableDeclaration', 'FunctionDeclaration', 'ExpressionStatement'].includes(
+              node.type
+            ) && node.loc.start.line !== node.loc.end.line
+          )
+        }
+
+        const compact = (statement) => {
+          const node = statement.declaration ?? statement
+          if (node.loc.start.line !== node.loc.end.line) return false
           if (node.type === 'FunctionDeclaration') return Boolean(node.body)
-          if (node.type === 'VariableDeclaration') {
-            return (
-              node.loc.start.line !== node.loc.end.line ||
-              node.declarations.some((declaration) => hasCallback(declaration.init))
-            )
-          }
-          if (node.type === 'ExpressionStatement') {
-            return node.loc.start.line !== node.loc.end.line || hasCallback(node.expression)
-          }
-          return false
+          if (['derived state', 'effects/lifecycle'].includes(group(statement))) return true
+          if (node.type === 'VariableDeclaration')
+            return node.declarations.some((declaration) => hasCallback(declaration.init))
+          return node.type === 'ExpressionStatement' && hasCallback(node.expression)
         }
 
         for (let index = 1; index < program.body.length; index++) {
@@ -175,8 +182,9 @@ export default {
             previousNode.id?.name === currentNode.id?.name
           )
             continue
-          if (previousGroup === currentGroup && !standalone(previous) && !standalone(current))
-            continue
+          const separate =
+            previousGroup !== currentGroup || standalone(previous) || standalone(current)
+          if (!separate && !(compact(previous) && compact(current))) continue
 
           // Walk every comment so leading comments stay attached and trailing comments stay in place.
           const comments = source
@@ -191,15 +199,20 @@ export default {
           const range = [start.range[1], end.range[0]]
           const gap = source.text.slice(...range)
           // Never cross HTML boundaries between two <script> blocks or modify comment contents.
-          if (!/^\s*$/.test(gap) || (gap.match(/\n/g) ?? []).length >= 2) continue
+          if (!/^\s*$/.test(gap)) continue
+          const lines = (gap.match(/\n/g) ?? []).length
+          if (separate ? lines >= 2 : lines < 2 || comments.length > 0) continue
 
           context.report({
             node: current,
-            messageId: 'separate',
+            messageId: separate ? 'separate' : 'compact',
             data: { previous: previousGroup, current: currentGroup },
             fix: (fixer) => {
               const eol = source.text.includes('\r\n') ? '\r\n' : '\n'
-              return fixer.replaceTextRange(range, `${eol}${eol}${gap.match(/[\t ]*$/)[0]}`)
+              return fixer.replaceTextRange(
+                range,
+                `${eol}${separate ? eol : ''}${gap.match(/[\t ]*$/)[0]}`
+              )
             },
           })
         }
