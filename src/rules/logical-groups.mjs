@@ -6,6 +6,7 @@ const macros = new Set([
   'defineSlots',
   'defineExpose',
 ])
+
 const effects = new Set([
   'watch',
   'watchEffect',
@@ -49,7 +50,10 @@ export default {
     type: 'layout',
     fixable: 'whitespace',
     schema: [],
-    docs: { description: 'Separate top-level logical groups without reordering code.' },
+    docs: {
+      description:
+        'Separate logical groups, callback declarations, and multiline declarations without reordering code.',
+    },
     messages: { separate: 'Add a blank line between {{previous}} and {{current}}.' },
   },
   create(context) {
@@ -133,12 +137,46 @@ export default {
           return 'statements'
         }
 
+        const hasCallback = (node) => {
+          if (!node) return false
+          if (['ArrowFunctionExpression', 'FunctionExpression'].includes(node.type)) return true
+          return (source.visitorKeys[node.type] ?? []).some((key) => {
+            const child = node[key]
+            return Array.isArray(child) ? child.some(hasCallback) : hasCallback(child)
+          })
+        }
+
+        const standalone = (statement) => {
+          const node = statement.declaration ?? statement
+          if (node.type === 'FunctionDeclaration') return Boolean(node.body)
+          if (node.type === 'VariableDeclaration') {
+            return (
+              node.loc.start.line !== node.loc.end.line ||
+              node.declarations.some((declaration) => hasCallback(declaration.init))
+            )
+          }
+          if (node.type === 'ExpressionStatement') {
+            return node.loc.start.line !== node.loc.end.line || hasCallback(node.expression)
+          }
+          return false
+        }
+
         for (let index = 1; index < program.body.length; index++) {
           const previous = program.body[index - 1]
           const current = program.body[index]
           const previousGroup = group(previous)
           const currentGroup = group(current)
-          if (previousGroup === currentGroup) continue
+          const previousNode = previous.declaration ?? previous
+          const currentNode = current.declaration ?? current
+          // Overload signatures belong immediately beside their implementation.
+          if (
+            previousNode.type === 'TSDeclareFunction' &&
+            ['TSDeclareFunction', 'FunctionDeclaration'].includes(currentNode.type) &&
+            previousNode.id?.name === currentNode.id?.name
+          )
+            continue
+          if (previousGroup === currentGroup && !standalone(previous) && !standalone(current))
+            continue
 
           // Walk every comment so leading comments stay attached and trailing comments stay in place.
           const comments = source
