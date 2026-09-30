@@ -3,7 +3,7 @@ import { initialize } from '../src/init.mjs'
 import { runFormatting } from '../src/format.mjs'
 import { doctor } from '../src/doctor.mjs'
 
-const help = `code-breathe 0.0.3
+const help = `code-breathe 0.0.5
 
   code-breathe init [--dry-run] [--no-editor] [--no-agents]
   code-breathe format <files/globs...>
@@ -22,7 +22,7 @@ const main = async () => {
     return 0
   }
   if (args[0] === '--version') {
-    console.log('0.0.3')
+    console.log('0.0.5')
     return 0
   }
   const action = args.shift()
