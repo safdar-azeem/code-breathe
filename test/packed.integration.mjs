@@ -30,13 +30,17 @@ try {
   assert.match(run(consumer, process.execPath, [cli, 'init']), /already initialized/i)
   await writeFile(
     path.join(consumer, 'Profile.vue'),
-    '<script setup lang="ts">\nimport { computed } from "vue"\nconst props=defineProps<{name:string}>()\nconst state=1\nconst label=computed(()=>props.name)\n</script>\n<template><p>{{label}}</p></template>'
+    '<script setup lang="ts">\nimport { computed } from "vue"\nconst props=defineProps<{name:string}>()\nconst website=useWebsite()\nconst profile=useSection("profile")\nconst label=computed(()=>props.name)\nconst upper=computed(()=>label.value.toUpperCase())\nconst select=()=>website.select()\nconst retry=()=>website.retry()\n</script>\n<template><p>{{label}}</p></template>'
   )
   run(consumer, 'npm', ['run', 'format:files', '--', 'Profile.vue'])
   assert.match(
     await readFile(path.join(consumer, 'Profile.vue'), 'utf8'),
     /from 'vue'\n\nconst props/
   )
+  const formatted = await readFile(path.join(consumer, 'Profile.vue'), 'utf8')
+  assert.match(formatted, /useWebsite\(\)\nconst profile/)
+  assert.match(formatted, /computed\(\(\) => props.name\)\n\nconst upper/)
+  assert.match(formatted, /website.select\(\)\n\nconst retry/)
   run(consumer, process.execPath, [cli, 'format', '--all'])
   run(consumer, process.execPath, [cli, 'check', '--all'])
   run(consumer, process.execPath, [cli, 'doctor'])
