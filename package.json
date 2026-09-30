@@ -1,10 +1,11 @@
 {
   "name": "code-breathe",
-  "version": "0.0.2",
-  "description": "Consistent formatting and logical blank lines for Vue, JavaScript, and TypeScript projects.",
+  "version": "0.0.3",
+  "description": "Intelligently groups and sorts code snippets for better readability, consistency, and maintainability.",
   "type": "module",
   "license": "MIT",
   "author": "Safdar Azeem",
+  "repository": "https://github.com/safdar-azeem/code-breathe",
   "engines": {
     "node": "^22.13.0 || >=24.0.0"
   },
