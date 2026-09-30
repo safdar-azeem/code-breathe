@@ -5,6 +5,7 @@ import { ESLint } from 'eslint'
 import preset from './prettier.cjs'
 import eslintConfig from './eslint.mjs'
 import { collectFiles } from './files.mjs'
+import templateFormatting from './template-format.cjs'
 
 export const runFormatting = async ({
   cwd = process.cwd(),
@@ -48,6 +49,14 @@ export const runFormatting = async ({
           filepath: absolute,
         })
       }
+      formatted = (
+        await templateFormatting.finishTemplateFormatting(
+          formatted,
+          { ...config, filepath: absolute },
+          undefined,
+          original.length
+        )
+      ).formatted
       if (original !== formatted) {
         differences++
         if (write) await writeFile(absolute, formatted)
