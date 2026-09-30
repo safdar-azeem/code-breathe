@@ -70,7 +70,7 @@ test('supports Vue aliases, namespaces and effects', async () => {
   assert.match(namespace, /state = 1\n\nconst value/)
 })
 
-test('separates each callback declaration while keeping simple composables together', async () => {
+test('keeps one-line computed values together and separates multiline functions', async () => {
   const text = `<script setup lang="ts">
 import { computed } from 'vue'
 const website = useWebsite()
@@ -88,7 +88,7 @@ const retry = () => {
   const output = await fix(text)
   assert.match(output, /useWebsite\(\)\nconst profile/)
   assert.match(output, /useSection\('profile'\)\n\nconst id/)
-  assert.match(output, /profile.value\?\.id\)\n\nconst binding/)
+  assert.match(output, /profile.value\?\.id\)\nconst binding/)
   assert.match(output, /website.binding\(id.value\)\)\n\nconst select/)
   assert.match(output, /website.select\(id.value\)\n\}\n\nconst retry/)
   assert.equal(await fix(output), output)
@@ -117,7 +117,44 @@ const read = function () { return 2 }
   assert.match(output, /scope: 'home' \}\n\)\n\nconst socials/)
   assert.match(output, /return filtered\n\}\n\nfunction retry/)
   assert.match(output, /values = \[1, 2\]\n  const filtered/)
-  assert.match(output, /return 1 \}\n\nconst read/)
+  assert.match(output, /return 1 \}\nconst read/)
+  assert.equal(await fix(output, 'example.ts'), output)
+})
+
+test('removes old blank lines between related one-line callbacks, preserving comments', async () => {
+  const text = `import { computed } from 'vue'
+
+const project = computed(() => props.detail.record)
+
+const detailConfig = computed(() => props.detail.presentation)
+
+const select = () => website.select()
+
+const retry = () => website.retry()
+
+// This comment introduces a different operation.
+const update = () => website.update()
+`
+  const output = await fix(text, 'example.ts')
+  assert.match(output, /props.detail.record\)\nconst detailConfig/)
+  assert.match(output, /props.detail.presentation\)\n\nconst select/)
+  assert.match(output, /website.select\(\)\nconst retry/)
+  assert.match(output, /website.retry\(\)\n\n\/\/ This comment/)
+  assert.equal(await fix(output, 'example.ts'), output)
+})
+
+test('keeps multiline computed values separated on both sides', async () => {
+  const text = `import { computed } from 'vue'
+const project = computed(() => props.detail.record)
+const detailConfig = computed(() => {
+  const config = props.detail.presentation
+  return config
+})
+const title = computed(() => project.value.title)
+`
+  const output = await fix(text, 'example.ts')
+  assert.match(output, /props.detail.record\)\n\nconst detailConfig/)
+  assert.match(output, /return config\n\}\)\n\nconst title/)
   assert.equal(await fix(output, 'example.ts'), output)
 })
 
