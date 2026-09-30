@@ -3,6 +3,7 @@ import vueParser from 'vue-eslint-parser'
 import plugin from './plugin.mjs'
 
 export const scriptFiles = ['**/*.{js,mjs,cjs,jsx,ts,mts,cts,tsx,vue}']
+
 export const defaultIgnores = [
   '**/node_modules/**',
   '**/dist/**',
