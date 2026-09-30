@@ -32,7 +32,7 @@
     "test:integration": "node test/packed.integration.mjs",
     "format:files": "node bin/code-breathe.mjs format",
     "format:check": "node bin/code-breathe.mjs check --all",
-    "prepublishOnly": "npm test && npm run format:check"
+    "prepublishOnly": "npm run format:files -- package.json && npm test && npm run format:check"
   },
   "dependencies": {
     "@typescript-eslint/parser": "8.71.0",
